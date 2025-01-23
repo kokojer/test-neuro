@@ -1,0 +1,13 @@
+{
+  "name": "test-neuro",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "sort": "node ./sortByFolders.js",
+    "compare": "node ./compareFiles.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "kokojer",
+  "license": "ISC",
+  "description": ""
+}
