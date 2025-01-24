@@ -5,6 +5,7 @@
   "scripts": {
     "sort": "node ./sortByFolders.js",
     "compare": "node ./compareFiles.js",
+    "sortAngrySad": "node ./angrySad.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "kokojer",
