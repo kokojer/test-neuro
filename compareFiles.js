@@ -7,7 +7,9 @@ const sourceFolder = "./source_files";
 
 // Регулярка для извлечения эмоций, UUID и никнейма
 const emotionRegex = /\[(?<emotion>[a-z]+)-(?<value>[0-9.]+)\]/g;
+// Вырезаем полное имя файла
 const uuidRegex = /_(?<uuid>[a-f0-9\-]+)\.ogg$/;
+// Вырезаем всё что идет до happy (Никнейм)
 const nicknameRegex = /^.+(?=_\[happy)/;
 
 // Функция для извлечения эмоций, UUID и никнейма
@@ -42,7 +44,9 @@ function getEmotionDifferences(folder1, folder2) {
     // Обработка файлов из папки 1
     files1.forEach((file) => {
         const data = parseFile(file);
-        if (data) {
+        // Если сумма эмоций по файлу равна 0 то убираем его из дальнейшего подсчета
+        const sumEmotions = data?.emotions && Object.values(data.emotions).reduce((acc, item) => acc + item, 0);
+        if (data && sumEmotions > 0) {
             fileMap1.set(data.uuid, data);
         }
     });
@@ -50,7 +54,9 @@ function getEmotionDifferences(folder1, folder2) {
     // Обработка файлов из папки 2
     files2.forEach((file) => {
         const data = parseFile(file);
-        if (data) {
+        // Если сумма эмоций по файлу равна 0 то убираем его из дальнейшего подсчета
+        const sumEmotions = data?.emotions && Object.values(data.emotions).reduce((acc, item) => acc + item, 0);
+        if (data && sumEmotions > 0) {
             fileMap2.set(data.uuid, data);
         }
     });
@@ -73,7 +79,7 @@ function getEmotionDifferences(folder1, folder2) {
             if (emotions2[emotion] !== undefined) {
                 const diff = Math.abs(emotions1[emotion] - emotions2[emotion]);
                 userDifference += diff;
-                userEmotions++;
+                userEmotions = userEmotions + Math.max(emotions1[emotion], emotions2[emotion]);
             }
         });
 
@@ -87,6 +93,7 @@ function getEmotionDifferences(folder1, folder2) {
         userStats[nickname1].totalDifference += userDifference;
         userStats[nickname1].totalEmotions += userEmotions;
     });
+
     const accuracy = totalEmotions > 0 ? 1 - totalDifference / totalEmotions : 1;
 
     return { accuracy, totalDifference, commonUuids, userStats };
