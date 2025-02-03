@@ -10,6 +10,21 @@ const emotionRegex = /\[(?<emotion>[a-z]+)-(?<value>[0-9.]+)\]/g;
 const uuidRegex = /_(?<uuid>[a-f0-9\-]+)\.ogg$/;
 const nicknameRegex = /^.+(?=_\[happy)/;
 
+const mappingNicknames = {
+    '.lokix': 'Александр Ревенко',
+    '.redrobin.': 'Евгения Процик',
+    '19vt1zaikaantonvladimirovich': 'Aнтон Заика',
+    'georgealiev': 'Георгий Алиев',
+    'kokojer': 'Андрей Гордеев',
+    'lenisstyle': 'Елена Куюкина',
+    'martin_prazauskas': 'Мартин Празаускас',
+    'm_eagleson': 'Михаил Орлов',
+    'unsichtbarerfrosch': 'Полина Юникова',
+    'vasyakocherga': 'Александр Бык',
+    'valentinshchepin': 'Валентин Щепин',
+    'stasia.stv': 'Анастасия Кириллова',
+}
+
 // Функция для извлечения эмоций, UUID и никнейма
 function parseFile(fileName) {
     const matchUuid = fileName.match(uuidRegex);
@@ -120,7 +135,6 @@ function getEmotionMetrics(folder1, folder2) {
         const MRE = 1 - totalDifference / totalMaxEmotions;
         return { accuracy, precision, recall, MAE, MRE };
     }
-
     // Рассчитываем общие метрики
     const globalMetrics = calculateMetrics(TP, TN, FP, FN, totalDifference, countEmotions, totalMaxEmotions);
 
@@ -144,7 +158,7 @@ Object.entries(userMetrics).forEach(([nickname, metrics]) => {
     // const userAccuracy =
     //     stats.totalEmotions > 0 ? 1 - stats.totalDifference / stats.totalEmotions : 1;
 
-    console.log(`Пользователь: ${nickname}`);
+    console.log(`Пользователь: ${mappingNicknames[nickname]}`);
     // console.log(`  Файлов обработано: ${stats.totalEmotions / 4}`);
     // console.log(`  Суммарная разница эмоций: ${stats.totalDifference.toFixed(2)}`);
     console.log(`  Accuracy: ${(metrics.accuracy * 100).toFixed(2)}%`);

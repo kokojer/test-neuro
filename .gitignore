@@ -4,4 +4,5 @@ organized2_files/*
 organized3_files/*
 source_files/*
 filtered_files/*
+node_modules
 .idea
