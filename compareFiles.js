@@ -61,13 +61,19 @@ function getEmotionMetrics(folder1, folder2) {
     const commonUuids = Array.from(fileMap1.keys()).filter((uuid) => fileMap2.has(uuid));
 
     let TP = 0, TN = 0, FP = 0, FN = 0;
+    let totalDifference = 0;
+    let countEmotions = 0;
+    let totalMaxEmotions = 0;
 
     commonUuids.forEach((uuid) => {
         const { nickname, emotions: emotions1 } = fileMap1.get(uuid);
         const { emotions: emotions2 } = fileMap2.get(uuid);
+        let userDifference = 0;
+        let userCountEmotions = 0;
+        let userMaxEmotions = 0;
 
         if (!userStats[nickname]) {
-            userStats[nickname] = { TP: 0, TN: 0, FP: 0, FN: 0 };
+            userStats[nickname] = { TP: 0, TN: 0, FP: 0, FN: 0, userDifference: 0, userCountEmotions: 0, userMaxEmotions: 0 };
         }
 
         emotionNames.forEach((emotion) => {
@@ -87,25 +93,42 @@ function getEmotionMetrics(folder1, folder2) {
                 FN++;
                 userStats[nickname].FN++;
             }
+
+            if(emotions1[emotion] !== undefined && emotions2[emotion] !== undefined) {
+                const diff = Math.abs(emotions1[emotion] - emotions2[emotion]);
+                userDifference += diff;
+                userCountEmotions++;
+                userMaxEmotions = userMaxEmotions + Math.max(emotions1[emotion], emotions2[emotion]);
+            }
         });
+
+        totalDifference += userDifference;
+        countEmotions += userCountEmotions;
+        totalMaxEmotions += userMaxEmotions;
+
+        userStats[nickname].userDifference += userDifference;
+        userStats[nickname].userCountEmotions += userCountEmotions;
+        userStats[nickname].userMaxEmotions += userMaxEmotions;
     });
 
     // Функция для вычисления метрик
-    function calculateMetrics(TP, TN, FP, FN) {
+    function calculateMetrics(TP, TN, FP, FN, totalDifference, countEmotions, totalMaxEmotions) {
         const accuracy = (TP + TN) / (TP + TN + FP + FN);
         const precision = TP + FP > 0 ? TP / (TP + FP) : 0;
         const recall = TP + FN > 0 ? TP / (TP + FN) : 0;
-        return { accuracy, precision, recall };
+        const MAE = 1 - totalDifference / countEmotions;
+        const MRE = 1 - totalDifference / totalMaxEmotions;
+        return { accuracy, precision, recall, MAE, MRE };
     }
 
     // Рассчитываем общие метрики
-    const globalMetrics = calculateMetrics(TP, TN, FP, FN);
+    const globalMetrics = calculateMetrics(TP, TN, FP, FN, totalDifference, countEmotions, totalMaxEmotions);
 
     // Рассчитываем метрики по каждому пользователю
     const userMetrics = {};
     for (const user in userStats) {
-        const { TP, TN, FP, FN } = userStats[user];
-        userMetrics[user] = calculateMetrics(TP, TN, FP, FN);
+        const { TP, TN, FP, FN, userDifference, userCountEmotions, userMaxEmotions } = userStats[user];
+        userMetrics[user] = calculateMetrics(TP, TN, FP, FN, userDifference, userCountEmotions, userMaxEmotions);
     }
 
     return { globalMetrics, userMetrics, commonUuids };
@@ -124,14 +147,18 @@ Object.entries(userMetrics).forEach(([nickname, metrics]) => {
     console.log(`Пользователь: ${nickname}`);
     // console.log(`  Файлов обработано: ${stats.totalEmotions / 4}`);
     // console.log(`  Суммарная разница эмоций: ${stats.totalDifference.toFixed(2)}`);
-    console.log(`  Точность: ${(metrics.accuracy * 100).toFixed(2)}%\n`);
-    console.log(`  Precision: ${(metrics.precision * 100).toFixed(2)}%\n`);
-    console.log(`  Recall: ${(metrics.recall * 100).toFixed(2)}%\n`);
+    console.log(`  Accuracy: ${(metrics.accuracy * 100).toFixed(2)}%`);
+    console.log(`  Precision: ${(metrics.precision * 100).toFixed(2)}%`);
+    console.log(`  Recall: ${(metrics.recall * 100).toFixed(2)}%`);
+    console.log("  MAE:", (metrics.MAE * 100).toFixed(2) + "%");
+    console.log("  MRE:", (metrics.MRE * 100).toFixed(2) + "%\n");
 });
 
 // Итоговое значение
 console.log("Итоговые результаты:");
 console.log("  Общих файлов:", commonUuids.length);
-console.log("  Итоговая точность:", (globalMetrics.accuracy * 100).toFixed(2) + "%");
+console.log("  Accuracy:", (globalMetrics.accuracy * 100).toFixed(2) + "%");
 console.log("  Precision:", (globalMetrics.precision * 100).toFixed(2) + "%");
 console.log("  Recall:", (globalMetrics.recall * 100).toFixed(2) + "%");
+console.log("  MAE:", (globalMetrics.MAE * 100).toFixed(2) + "%");
+console.log("  MRE:", (globalMetrics.MRE * 100).toFixed(2) + "%");
